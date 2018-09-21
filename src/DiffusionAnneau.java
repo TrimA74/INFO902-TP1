@@ -11,7 +11,12 @@ public class DiffusionAnneau {
         if(args[3].equals("-broadcaster")){
             idBroadCaster = Integer.parseInt(args[4]);
         }
+        DiffuseAnneauDouble(me,size,idBroadCaster);
 
+        MPI.Finalize();
+    }
+
+    public static void DiffuseAnneauSimple(int me,int size,int idBroadCaster){
         String bufferString[] = new String[1];
 
         if(me == idBroadCaster){
@@ -26,6 +31,29 @@ public class DiffusionAnneau {
                 System.out.println("I'm <"+me+">: send " + bufferString[0]);
             }
         }
-        MPI.Finalize();
+    }
+
+    public static void DiffuseAnneauDouble(int me,int size,int idBroadCaster){
+        String bufferString[] = new String[1];
+
+        if(me == idBroadCaster){
+            bufferString[0] = "coucou";
+            System.out.println("I'm <"+me+">: send " + bufferString[0] + " to " + (me +1 % size));
+            System.out.println("I'm <"+me+">: send " + bufferString[0] + " to " + ((me -1 + size)  % size));
+            MPI.COMM_WORLD.Send(bufferString, 0, 1, MPI.OBJECT, (me +1) % size, 99);
+            MPI.COMM_WORLD.Send(bufferString, 0, 1, MPI.OBJECT, (me -1 + size) % size, 99);
+        } else {
+            Status mps = MPI.COMM_WORLD.Recv( bufferString, 0, 1, MPI.OBJECT,MPI.ANY_SOURCE , 99 );
+            System.out.println("I'm <"+me+">: receive " + bufferString[0]);
+
+             if( (me - idBroadCaster + size) % size <= size/2 -1) {
+                 MPI.COMM_WORLD.Send(bufferString, 0, 1, MPI.OBJECT, (me + 1) % size, 99);
+                 System.out.println("I'm <" + me + ">: send " + bufferString[0] + " to " + ((me + 1) % size));
+             }
+             else if((me - idBroadCaster + size) % size > size/2 + 1) {
+                 MPI.COMM_WORLD.Send(bufferString, 0, 1, MPI.OBJECT, (me - 1) % size, 99);
+                 System.out.println("I'm <" + me + ">: send " + bufferString[0] + " to " + (me - 1) % size);
+            }
+        }
     }
 }

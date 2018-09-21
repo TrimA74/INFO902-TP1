@@ -7,11 +7,18 @@ public class DiffusionCentralisee {
 	int size = MPI.COMM_WORLD.Size();
 	String bufferString[] = new String[1];
 
-	if(me == 0){
+	int idBroadCaster = 0;
+	if(args[3].equals("-broadcaster")){
+		idBroadCaster = Integer.parseInt(args[4]);
+	}
+
+	if(me == idBroadCaster){
 	    bufferString[0] = "coucou";
 	    System.out.println("I'm <"+me+">: send " + bufferString[0]);
-	    for(int i=1; i<size; i++){
-			MPI.COMM_WORLD.Send(bufferString, 0, 1, MPI.OBJECT, i, 99);
+	    for(int i=0; i<size; i++){
+	    	if(i != me){
+				MPI.COMM_WORLD.Send(bufferString, 0, 1, MPI.OBJECT, i, 99);
+			}
 	    }
 	}else{
 	    Status mps = MPI.COMM_WORLD.Recv( bufferString, 0, 1, MPI.OBJECT, MPI.ANY_SOURCE, 99 );
